@@ -1,0 +1,11 @@
+# Velora - File Converter
+# https://velora.tengra.studio
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://velora.tengra.studio/sitemap.xml
+
+# Disallow API routes
+Disallow: /api/
