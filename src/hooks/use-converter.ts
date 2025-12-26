@@ -12,8 +12,8 @@ export type Action = {
     is_converting?: boolean;
     is_converted?: boolean;
     is_error?: boolean;
-    url?: any;
-    output?: any;
+    url?: string;
+    output?: string;
     // Compression stats
     original_size?: number;
     converted_size?: number;
@@ -53,7 +53,7 @@ export default function useConverter() {
         try {
             const saved = localStorage.getItem(HISTORY_KEY);
             if (saved) setHistory(JSON.parse(saved));
-        } catch (e) { }
+        } catch { }
     }, []);
 
     // Save history to localStorage
@@ -159,9 +159,10 @@ export default function useConverter() {
                         : "";
                 setLogs(prev => [...prev, `✓ ${action.file_name} converted${savingsText}`]);
 
-            } catch (e: any) {
-                console.error(e);
-                setLogs(prev => [...prev, `✗ Error: ${e.message}`]);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Conversion failed";
+                console.error(error);
+                setLogs(prev => [...prev, `✗ Error: ${message}`]);
                 setActions(prev => prev.map(a => {
                     if (a.file_name === action.file_name) {
                         return { ...a, is_converting: false, is_error: true };

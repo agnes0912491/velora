@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import translationConfig from '@/tl.config';
 
 export async function GET(
     request: Request,

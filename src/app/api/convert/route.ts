@@ -8,6 +8,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
+const BIN_PATH = join(process.cwd(), "bin");
 
 // Velora Algorithm presets
 const VELORA_PRESETS = {
@@ -25,9 +26,41 @@ const HEIF_FORMATS = ['heic', 'heif'];
 const RAW_FORMATS = ['cr2', 'nef', 'arw', 'dng', 'orf', 'rw2'];
 const IMAGEMAGICK_FORMATS = ['psd', 'eps', 'pdf', 'ai', 'svg'];
 
-async function convertWithImageMagick(inputPath: string, outputPath: string, quality?: number): Promise<void> {
+const MAX_DIMENSION = 2048;
+
+function clampDimension(value: number | undefined): number | undefined {
+    if (!value || value <= 0) return undefined;
+    return Math.min(value, MAX_DIMENSION);
+}
+
+async function convertWithImageMagick(inputPath: string, outputPath: string, quality?: number, width?: number, height?: number): Promise<void> {
     const q = quality || 85;
-    await execAsync(`convert "${inputPath}" -quality ${q} "${outputPath}"`);
+    const isSvg = inputPath.toLowerCase().endsWith('.svg');
+    const rsvgPath = join(BIN_PATH, "rsvg-convert");
+
+    const w = clampDimension(width);
+    const h = clampDimension(height);
+
+    if (isSvg) {
+        try {
+            // Superior SVG rendering with librsvg
+            let rsvgCmd = `"${rsvgPath}"`;
+            if (w) rsvgCmd += ` -w ${w}`;
+            if (h) rsvgCmd += ` -h ${h}`;
+            rsvgCmd += ` "${inputPath}" -o "${outputPath}"`;
+            await execAsync(rsvgCmd);
+            return;
+        } catch (e) {
+            console.warn("[Velora] rsvg-convert failed, falling back to ImageMagick", e);
+        }
+    }
+
+    let resizeArg = '';
+    if (w && h) resizeArg = `-resize ${w}x${h}`;
+    else if (w) resizeArg = `-resize ${w}x`;
+    else if (h) resizeArg = `-resize x${h}`;
+
+    await execAsync(`convert "${inputPath}" ${resizeArg} -quality ${q} "${outputPath}"`);
 }
 
 async function convertWithHeif(inputPath: string, outputPath: string): Promise<void> {
@@ -57,6 +90,10 @@ export async function POST(request: NextRequest) {
     const quality = data.get("quality") as string;
     const bitrate = data.get("bitrate") as string;
     const resolution = data.get("resolution") as string;
+    const widthParam = data.get("width") as string;
+    const heightParam = data.get("height") as string;
+    const targetWidth = widthParam ? clampDimension(parseInt(widthParam)) : undefined;
+    const targetHeight = heightParam ? clampDimension(parseInt(heightParam)) : undefined;
 
     if (!file || !to) {
         return NextResponse.json({ error: "Missing file or target format" }, { status: 400 });
@@ -91,7 +128,7 @@ export async function POST(request: NextRequest) {
             await convertWithDcraw(inputPath, outputPath);
         } else if (needsImageMagick && isImage) {
             const q = quality ? parseInt(quality) : (algorithm === 'velora' ? VELORA_PRESETS.image.quality : 85);
-            await convertWithImageMagick(inputPath, outputPath, q);
+            await convertWithImageMagick(inputPath, outputPath, q, targetWidth, targetHeight);
         } else {
             // Use FFmpeg (default)
             await new Promise((resolve, reject) => {
@@ -111,6 +148,12 @@ export async function POST(request: NextRequest) {
                 } else {
                     if (quality && isImage) {
                         cmd = cmd.outputOptions([`-q:v ${Math.round((100 - parseInt(quality)) / 3)}`]);
+                    }
+                    // Image resize (FFmpeg path)
+                    if (isImage && (targetWidth || targetHeight)) {
+                        const w = targetWidth || -1;
+                        const h = targetHeight || -1;
+                        cmd = cmd.outputOptions([`-vf scale=${w}:${h}:force_original_aspect_ratio=decrease`]);
                     }
                     if (bitrate && bitrate !== "auto") {
                         if (isVideo) cmd = cmd.videoBitrate(bitrate);
@@ -149,9 +192,10 @@ export async function POST(request: NextRequest) {
 
         return response;
 
-    } catch (error: any) {
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Conversion failed";
         console.error("Conversion error:", error);
-        return NextResponse.json({ error: error.message || "Conversion failed" }, { status: 500 });
+        return NextResponse.json({ error: message }, { status: 500 });
     } finally {
         await unlink(inputPath).catch(() => { });
         await unlink(outputPath).catch(() => { });

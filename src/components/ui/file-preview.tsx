@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Eye, Image as ImageIcon, Video, Music } from "lucide-react";
+import { X, Eye, Image as ImageIcon } from "lucide-react";
 
 interface FilePreviewProps {
     file: File;
@@ -12,7 +12,6 @@ interface FilePreviewProps {
 }
 
 export default function FilePreview({ file, fileType, isOpen, onClose }: FilePreviewProps) {
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -20,25 +19,17 @@ export default function FilePreview({ file, fileType, isOpen, onClose }: FilePre
     const isVideo = fileType.includes('video');
     const isAudio = fileType.includes('audio');
 
-    useEffect(() => {
-        if (isOpen && file) {
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
+    type WindowWithWebkitAudioContext = Window & {
+        webkitAudioContext?: typeof AudioContext;
+    };
 
-            // Draw audio waveform if audio file
-            if (isAudio && canvasRef.current) {
-                drawWaveform(file, canvasRef.current);
-            }
-
-            return () => {
-                URL.revokeObjectURL(url);
-            };
-        }
-    }, [isOpen, file, isAudio]);
-
-    const drawWaveform = async (audioFile: File, canvas: HTMLCanvasElement) => {
+    const drawWaveform = useCallback(async (audioFile: File, canvas: HTMLCanvasElement) => {
         try {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const AudioContextClass =
+                window.AudioContext || (window as WindowWithWebkitAudioContext).webkitAudioContext;
+            if (!AudioContextClass) return;
+
+            const audioContext = new AudioContextClass();
             const arrayBuffer = await audioFile.arrayBuffer();
             const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
@@ -73,11 +64,29 @@ export default function FilePreview({ file, fileType, isOpen, onClose }: FilePre
             }
             ctx.stroke();
 
-            audioContext.close();
+            await audioContext.close();
         } catch (e) {
             console.error('Waveform error:', e);
         }
-    };
+    }, []);
+
+    const previewUrl = useMemo(() => {
+        if (!isOpen || !file) return null;
+        return URL.createObjectURL(file);
+    }, [isOpen, file]);
+
+    useEffect(() => {
+        if (!previewUrl) return;
+
+        // Draw audio waveform if audio file
+        if (isAudio && canvasRef.current) {
+            drawWaveform(file, canvasRef.current);
+        }
+
+        return () => {
+            URL.revokeObjectURL(previewUrl);
+        };
+    }, [drawWaveform, previewUrl, file, isAudio]);
 
     return (
         <AnimatePresence>

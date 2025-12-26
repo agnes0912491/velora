@@ -2,19 +2,13 @@
 
 import { useDropzone } from "react-dropzone";
 import { Upload, FileUp } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "@tengra/language";
 
 export default function Dropzone({ handleUpload }: { handleUpload: (files: File[]) => void }) {
-    const [isHover, setIsHover] = useState(false);
     const { t } = useTranslation();
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop: (acceptedFiles) => handleUpload(acceptedFiles),
-        onDragEnter: () => setIsHover(true),
-        onDragLeave: () => setIsHover(false),
-        onDropRejected: () => setIsHover(false),
-        onDropAccepted: () => setIsHover(false),
         accept: {
             "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".ico", ".tif", ".tiff", ".bmp", ".avif"],
             "audio/*": [".mp3", ".wav", ".ogg", ".aac", ".wma", ".flac", ".m4a", ".opus"],

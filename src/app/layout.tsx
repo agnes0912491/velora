@@ -7,51 +7,69 @@ import translationConfig from "@/tl.config";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Velora | Unlimited File Converter",
-    template: "%s | Velora",
-  },
-  description: "Free, unlimited file conversion in your browser. Convert images, videos, audio, and documents with privacy-first technology. No upload, 100% client-side processing.",
-  keywords: [
-    "file converter",
-    "dosya dönüştürücü",
-    "image converter",
-    "video converter",
-    "audio converter",
-    "free converter",
-    "online converter",
-    "privacy converter",
-    "client-side converter",
-    "ffmpeg browser",
-    "webassembly converter",
-  ],
-  metadataBase: new URL("https://velora.tengra.studio"),
-  alternates: {
-    canonical: "https://velora.tengra.studio",
-  },
-  openGraph: {
-    title: "Velora - Unlimited Free File Converter",
-    description: "Convert any file format in your browser. 100% private, unlimited, and free.",
-    url: "https://velora.tengra.studio",
-    siteName: "Velora",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Velora - Free File Converter",
-    description: "Convert files instantly in your browser. No uploads, unlimited conversions.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  icons: {
-    icon: "/velora-logo.svg",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
-  },
-};
+const BASE_URL = "https://velora.tengra.studio";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    metadataBase: new URL(BASE_URL),
+    title: {
+      default: "Velora — Ücretsiz & Sınırsız Dosya Dönüştürücü",
+      template: "%s | Velora",
+    },
+    description: "Resim, video ve ses dosyalarını anında, sınırsız ve tamamen ücretsiz dönüştürün. HEIC, MP4, MP3, WAV ve 60+ format desteği. Kayıt gerektirmez.",
+    keywords: [
+      "dosya dönüştürücü", "online file converter", "heic to jpg", "heic dönüştürücü",
+      "video dönüştürücü", "mp4 dönüştürücü", "ücretsiz dosya dönüştürme",
+      "sınırsız dönüştürücü", "raw convert", "webp to png", "png to jpg",
+      "tengra studio", "velora"
+    ],
+    authors: [{ name: "Tengra Studio", url: "https://tengra.studio" }],
+    creator: "Tengra Studio",
+    publisher: "Tengra Studio",
+    alternates: {
+      canonical: "/",
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    openGraph: {
+      type: "website",
+      locale: "tr_TR",
+      url: BASE_URL,
+      siteName: "Velora",
+      title: "Velora — Ücretsiz & Sınırsız Dosya Dönüştürücü",
+      description: "60+ format desteğiyle her türlü dosyayı saniyeler içinde ücretsiz dönüştürün. Kayıt yok, sınır yok.",
+      images: [
+        {
+          url: "https://cdn.tengra.studio/uploads/tengra_without_text.png",
+          width: 1200,
+          height: 630,
+          alt: "Velora File Converter",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Velora — Ücretsiz & Sınırsız Dosya Dönüştürücü",
+      description: "Tüm cihazlarda çalışan sınırsız dosya dönüştürme aracı.",
+      images: ["https://cdn.tengra.studio/uploads/tengra_without_text.png"],
+      creator: "@tengrastudio",
+    },
+    icons: {
+      icon: "/velora-logo.svg",
+      shortcut: "/logo.png",
+      apple: "/logo.png",
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

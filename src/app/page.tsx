@@ -5,27 +5,25 @@ import Dropzone from "@/components/ui/dropzone";
 import useConverter, { Action } from "@/hooks/use-converter";
 import useKeyboardShortcuts from "@/hooks/use-keyboard-shortcuts";
 import { useTranslation } from "@tengra/language";
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Download, Loader2, File, CheckCircle2, XCircle, RefreshCw, AlertTriangle, History, Eye, Settings, Trash2 } from "lucide-react";
 import { formatBytes } from "@/utils/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import HistoryPanel from "@/components/ui/history-panel";
 import AdvancedSettingsModal, { AdvancedSettings } from "@/components/ui/advanced-settings";
 import FilePreview from "@/components/ui/file-preview";
+import SEOContent from "@/components/ui/seo-content";
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 export default function Home() {
-  const { isLoaded, actions, setActions, convert, reset, progress, logs, history, clearHistory } = useConverter();
+  const { isLoaded, actions, setActions, convert, reset, history, clearHistory } = useConverter();
   const { t } = useTranslation();
-  const [isReady, setIsReady] = useState(false);
   const [sizeError, setSizeError] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   const [previewAction, setPreviewAction] = useState<Action | null>(null);
-
-  useEffect(() => { setIsReady(true); }, []);
 
   const handleUpload = useCallback((files: File[]) => {
     const oversizedFiles = files.filter(f => f.size > MAX_FILE_SIZE);
@@ -49,9 +47,10 @@ export default function Home() {
 
   const download = (action: Action) => {
     const a = document.createElement("a");
-    a.href = action.url; a.download = action.output;
+    a.href = action.url || "";
+    a.download = action.output || "file";
     document.body.appendChild(a); a.click();
-    URL.revokeObjectURL(action.url); document.body.removeChild(a);
+    URL.revokeObjectURL(action.url || ""); document.body.removeChild(a);
   };
 
   const downloadAll = useCallback(() => {
@@ -76,8 +75,6 @@ export default function Home() {
 
   const convertedCount = actions.filter(a => a.is_converted).length;
   const totalCount = actions.filter(a => a.to).length;
-
-  if (!isReady) return null;
 
   return (
     <>
@@ -230,6 +227,9 @@ export default function Home() {
         <footer className="mt-12 text-center text-xs text-[#8b9099]">
           <p><kbd className="px-2 py-1 bg-[#22262f] rounded">Ctrl+V</kbd> paste • <kbd className="px-2 py-1 bg-[#22262f] rounded">Enter</kbd> convert • <kbd className="px-2 py-1 bg-[#22262f] rounded">Esc</kbd> clear</p>
         </footer>
+
+        {/* SEO Rich Content Section */}
+        <SEOContent />
       </main>
     </>
   );

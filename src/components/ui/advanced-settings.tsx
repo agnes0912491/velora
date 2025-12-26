@@ -96,8 +96,8 @@ export default function AdvancedSettingsModal({
                                     <button
                                         onClick={() => setAlgorithm('standard')}
                                         className={`p-4 rounded-xl border transition-all ${algorithm === 'standard'
-                                                ? 'border-indigo-500 bg-indigo-500/10'
-                                                : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                                            ? 'border-indigo-500 bg-indigo-500/10'
+                                            : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
                                             }`}
                                     >
                                         <div className="text-lg font-semibold text-white mb-1">Standard</div>
@@ -106,8 +106,8 @@ export default function AdvancedSettingsModal({
                                     <button
                                         onClick={() => setAlgorithm('velora')}
                                         className={`p-4 rounded-xl border transition-all relative overflow-hidden ${algorithm === 'velora'
-                                                ? 'border-purple-500 bg-gradient-to-br from-purple-500/20 to-pink-500/20'
-                                                : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                                            ? 'border-purple-500 bg-gradient-to-br from-purple-500/20 to-pink-500/20'
+                                            : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
                                             }`}
                                     >
                                         <div className="flex items-center gap-2 text-lg font-semibold text-white mb-1">
@@ -123,18 +123,20 @@ export default function AdvancedSettingsModal({
                             {isImage && (
                                 <div className="space-y-3">
                                     <div className="flex justify-between">
-                                        <label className="text-sm font-medium text-slate-300">
+                                        <label htmlFor="quality-slider" className="text-sm font-medium text-slate-300">
                                             {t("advanced.quality") || "Quality"}
                                         </label>
                                         <span className="text-sm text-indigo-400">{quality}%</span>
                                     </div>
                                     <input
+                                        id="quality-slider"
                                         type="range"
                                         min="1"
                                         max="100"
                                         value={quality}
                                         onChange={(e) => setQuality(parseInt(e.target.value))}
                                         className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                        aria-label={t("advanced.quality") || "Quality"}
                                     />
                                     <div className="flex justify-between text-xs text-slate-500">
                                         <span>Smaller file</span>
@@ -149,15 +151,16 @@ export default function AdvancedSettingsModal({
                                     <label className="text-sm font-medium text-slate-300">
                                         {t("advanced.resolution") || "Resolution"}
                                     </label>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-3 gap-2" role="group" aria-label={t("advanced.resolution") || "Resolution"}>
                                         {RESOLUTIONS.map(res => (
                                             <button
                                                 key={res}
                                                 onClick={() => setResolution(res)}
                                                 className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${resolution === res
-                                                        ? 'bg-indigo-500 text-white'
-                                                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                                                    ? 'bg-indigo-500 text-white'
+                                                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                                                     }`}
+                                                aria-pressed={resolution === res}
                                             >
                                                 {res === 'original' ? 'Original' : res.toUpperCase()}
                                             </button>
@@ -169,13 +172,15 @@ export default function AdvancedSettingsModal({
                             {/* Bitrate (for video/audio) */}
                             {(isVideo || isAudio) && (
                                 <div className="space-y-3">
-                                    <label className="text-sm font-medium text-slate-300">
+                                    <label htmlFor="bitrate-select" className="text-sm font-medium text-slate-300">
                                         {t("advanced.bitrate") || "Bitrate"}
                                     </label>
                                     <select
+                                        id="bitrate-select"
                                         value={bitrate}
                                         onChange={(e) => setBitrate(e.target.value)}
                                         className="w-full py-3 px-4 bg-slate-800 border border-slate-700 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        aria-label={t("advanced.bitrate") || "Bitrate"}
                                     >
                                         {(isVideo ? VIDEO_BITRATES : AUDIO_BITRATES).map(br => (
                                             <option key={br} value={br}>
